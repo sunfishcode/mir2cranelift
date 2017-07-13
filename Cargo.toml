@@ -1,0 +1,21 @@
+[package]
+authors = ["The Cretonne Project Developers"]
+description = "An experimental compiler backend for Rust built with Cretonne."
+license = "MIT/Apache-2.0"
+name = "mir2cretonne"
+repository = "https://github.com/sunfishcode/mir2cretonne"
+version = "0.0.0"
+
+[[bin]]
+doc = false
+name = "mir2cretonne"
+
+[dependencies]
+error-chain = "0.1.9"
+log = "0.3.6"
+env_logger = "0.3.3"
+cretonne = { git = "https://github.com/stoklund/cretonne.git", branch="master"}
+cretonne-frontend = { git = "https://github.com/stoklund/cretonne.git", branch="master"}
+
+[dev-dependencies]
+compiletest_rs = "0.2.5"
