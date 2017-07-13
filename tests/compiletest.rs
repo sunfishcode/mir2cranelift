@@ -119,8 +119,9 @@ fn should_ignore(filename: &Path) -> bool {
     let mut file = File::open(filename).expect("could not open file");
     let mut source = String::new();
 
-    file.read_to_string(&mut source)
-        .expect("could not read file");
+    file.read_to_string(&mut source).expect(
+        "could not read file",
+    );
 
     return source.contains("xfail");
 }
@@ -146,20 +147,23 @@ fn run_and_check_output(vm: &str, mut cmd: std::process::Command, expected: &[St
         }
         Ok(output) => {
             let mut stderr = stderr.lock();
-            writeln!(stderr,
-                     "[{}] FAILED with exit code {:?}",
-                     vm,
-                     output.status.code())
-                    .unwrap();
+            writeln!(
+                stderr,
+                "[{}] FAILED with exit code {:?}",
+                vm,
+                output.status.code()
+            ).unwrap();
             writeln!(stderr, "cmd: \n {:?}", cmd).unwrap();
-            writeln!(stderr,
-                     "stdout: \n {}",
-                     std::str::from_utf8(&output.stdout).unwrap())
-                    .unwrap();
-            writeln!(stderr,
-                     "stderr: \n {}",
-                     std::str::from_utf8(&output.stderr).unwrap())
-                    .unwrap();
+            writeln!(
+                stderr,
+                "stdout: \n {}",
+                std::str::from_utf8(&output.stdout).unwrap()
+            ).unwrap();
+            writeln!(
+                stderr,
+                "stderr: \n {}",
+                std::str::from_utf8(&output.stderr).unwrap()
+            ).unwrap();
             return false;
         }
         Err(e) => {
@@ -202,17 +206,22 @@ impl<'a> TestSuite<'a> {
 
         let test_out = &get_target_dir().join("tests").join(self.name);
         if !test_out.parent().unwrap().exists() {
-            fs::create_dir(test_out.parent().unwrap())
-                .expect(format!("could not create test output directory, {}",
-                                test_out.parent().unwrap().display())
-                                .as_str());
+            fs::create_dir(test_out.parent().unwrap()).expect(
+                format!(
+                    "could not create test output directory, {}",
+                    test_out.parent().unwrap().display()
+                ).as_str(),
+            );
         } else {
             assert!(test_out.parent().unwrap().is_dir());
         }
         if !test_out.exists() {
-            fs::create_dir(test_out).expect(format!("could not create test output directory, {}",
-                                                    test_out.display())
-                                                    .as_str());
+            fs::create_dir(test_out).expect(
+                format!(
+                    "could not create test output directory, {}",
+                    test_out.display()
+                ).as_str(),
+            );
         } else {
             assert!(test_out.is_dir());
         }
@@ -242,11 +251,12 @@ impl<'a> TestSuite<'a> {
                 }
 
                 let stderr = std::io::stderr();
-                write!(stderr.lock(),
-                       "test [{}] {} ... ",
-                       self.name,
-                       path.display())
-                        .unwrap();
+                write!(
+                    stderr.lock(),
+                    "test [{}] {} ... ",
+                    self.name,
+                    path.display()
+                ).unwrap();
                 let mut cmd = std::process::Command::new(mir2cretonne);
                 cmd.arg(&path);
                 cmd.arg("-Dwarnings");
@@ -273,13 +283,14 @@ impl<'a> TestSuite<'a> {
                 }
             }
             let stderr = std::io::stderr();
-            writeln!(stderr.lock(),
-                     "[{}] {} passed; {} failed; {} ignored",
-                     self.name,
-                     pass,
-                     fail,
-                     ignored)
-                    .unwrap();
+            writeln!(
+                stderr.lock(),
+                "[{}] {} passed; {} failed; {} ignored",
+                self.name,
+                pass,
+                fail,
+                ignored
+            ).unwrap();
             if fail > 0 {
                 panic!("some compile-pass tests failed")
             }
@@ -287,7 +298,7 @@ impl<'a> TestSuite<'a> {
     }
 }
 
-#[cfg(any(target_os="linux", target_os="macos"))]
+#[cfg(any(target_os = "linux", target_os = "macos"))]
 fn run_in_vm(wasm: &Path, expected: &[String]) -> bool {
     let d8 = Path::new("./wasm-install/bin/d8");
     let rt = Path::new("./rt/rustrt.js");
@@ -298,7 +309,7 @@ fn run_in_vm(wasm: &Path, expected: &[String]) -> bool {
     run_and_check_output("V8", cmd, expected)
 }
 
-#[cfg(not(any(target_os="linux", target_os="macos")))]
+#[cfg(not(any(target_os = "linux", target_os = "macos")))]
 fn run_in_vm(_wasm: &Path, _expected: &[String]) -> bool {
     true
 }
@@ -357,7 +368,9 @@ fn find_sysroot() -> String {
         (Some(home), Some(toolchain)) => format!("{}/toolchains/{}", home, toolchain),
         _ => {
             option_env!("RUST_SYSROOT")
-                .expect("need to specify RUST_SYSROOT env var or use rustup or multirust")
+                .expect(
+                    "need to specify RUST_SYSROOT env var or use rustup or multirust",
+                )
                 .to_owned()
         }
     }

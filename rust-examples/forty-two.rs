@@ -3,12 +3,10 @@
 #![no_core]
 
 #[no_mangle]
-pub fn main() {
-}
+pub fn main() {}
 
 #[lang = "sized"]
 trait Sized {}
 
 #[lang = "copy"]
 pub trait Copy {}
-

@@ -10,7 +10,9 @@ fn run_miri(file: &str, sysroot: &str) -> Output {
     let libpath2 = path.join("target").join("debug").join("deps");
     let libpath2 = libpath2.to_str().unwrap();
     Command::new("cargo")
-        .args(&["run",
+        .args(
+            &[
+                "run",
                 "--",
                 "--sysroot",
                 sysroot,
@@ -18,7 +20,9 @@ fn run_miri(file: &str, sysroot: &str) -> Output {
                 libpath,
                 "-L",
                 libpath2,
-                file])
+                file,
+            ],
+        )
         .output()
         .unwrap_or_else(|e| panic!("failed to execute process: {}", e))
 }

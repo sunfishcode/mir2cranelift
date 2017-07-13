@@ -44,20 +44,22 @@ impl Mir2CretonneTransOptions {
     }
 }
 
-fn visit_krate<'g, 'tcx>(tcx: TyCtxt<'g, 'tcx, 'tcx>,
-                         entry_fn: Option<NodeId>)
-                         -> Vec<cretonne::ir::Function> {
+fn visit_krate<'g, 'tcx>(
+    tcx: TyCtxt<'g, 'tcx, 'tcx>,
+    entry_fn: Option<NodeId>,
+) -> Vec<cretonne::ir::Function> {
     let mut context: CretonneModuleCtxt = CretonneModuleCtxt::new(tcx, entry_fn);
-    tcx.hir
-        .krate()
-        .visit_all_item_likes(&mut context.as_deep_visitor());
+    tcx.hir.krate().visit_all_item_likes(
+        &mut context.as_deep_visitor(),
+    );
     context.functions
 }
 
-pub fn trans_crate<'a, 'tcx>(tcx: TyCtxt<'a, 'tcx, 'tcx>,
-                             entry_fn: Option<NodeId>,
-                             options: &Mir2CretonneTransOptions)
-                             -> Result<()> {
+pub fn trans_crate<'a, 'tcx>(
+    tcx: TyCtxt<'a, 'tcx, 'tcx>,
+    entry_fn: Option<NodeId>,
+    options: &Mir2CretonneTransOptions,
+) -> Result<()> {
 
     let _ignore = tcx.dep_graph.in_ignore();
 
@@ -85,9 +87,10 @@ struct CretonneModuleCtxt<'b, 'gcx: 'b + 'tcx, 'tcx: 'b> {
 }
 
 impl<'c, 'gcx: 'c + 'tcx, 'tcx: 'c> CretonneModuleCtxt<'c, 'gcx, 'tcx> {
-    fn new(tcx: TyCtxt<'c, 'gcx, 'tcx>,
-           entry_fn: Option<NodeId>)
-           -> CretonneModuleCtxt<'c, 'gcx, 'tcx> {
+    fn new(
+        tcx: TyCtxt<'c, 'gcx, 'tcx>,
+        entry_fn: Option<NodeId>,
+    ) -> CretonneModuleCtxt<'c, 'gcx, 'tcx> {
         CretonneModuleCtxt {
             tcx: tcx,
             entry_fn: entry_fn,
@@ -243,9 +246,11 @@ impl<'f: 'g, 'g, 'd, 'tcx: 'd> CretonneFnCtxt<'f, 'g, 'd, 'tcx, 'tcx> {
 
         // TODO: Use mir.local_decls directly rather than the two iterators.
         for mir_var in mir.vars_iter() {
-            debug!("adding local {:?}: {:?}",
-                   mir_var,
-                   mir.local_decls[mir_var].ty);
+            debug!(
+                "adding local {:?}: {:?}",
+                mir_var,
+                mir.local_decls[mir_var].ty
+            );
             match rust_ty_to_cretonne(mir.local_decls[mir_var].ty) {
                 Some(cton_ty) => {
                     panic!("Unimplemented: local variables");
@@ -286,8 +291,10 @@ impl<'f: 'g, 'g, 'd, 'tcx: 'd> CretonneFnCtxt<'f, 'g, 'd, 'tcx, 'tcx> {
             match bb.terminator().kind {
                 TerminatorKind::Return => {
                     // TODO: Emit function epilogue, if necessary.
-                    debug!("emitting Return from fn {:?}",
-                           self.tcx.item_path_str(self.did));
+                    debug!(
+                        "emitting Return from fn {:?}",
+                        self.tcx.item_path_str(self.did)
+                    );
                     if ret_ty.is_nil() {
                         self.builder.ins().return_(&[]);
                     } else {
@@ -305,17 +312,21 @@ impl<'f: 'g, 'g, 'd, 'tcx: 'd> CretonneFnCtxt<'f, 'g, 'd, 'tcx, 'tcx> {
                     panic!("Unimplemented: terminator calls");
                 }
                 TerminatorKind::Goto { ref target } => {
-                    debug!("emitting Branch for Goto, from bb{} to bb{}",
-                           i,
-                           target.index());
+                    debug!(
+                        "emitting Branch for Goto, from bb{} to bb{}",
+                        i,
+                        target.index()
+                    );
                     panic!("Unimplemented: Goto");
                 }
                 TerminatorKind::Assert { ref target, .. } => {
                     // TODO: An assert is not a GOTO!!!
                     // Fix this!
-                    debug!("emitting Branch for Goto, from bb{} to bb{}",
-                           i,
-                           target.index());
+                    debug!(
+                        "emitting Branch for Goto, from bb{} to bb{}",
+                        i,
+                        target.index()
+                    );
                     panic!("Unimplemented: Assert");
                 }
                 _ => (),
@@ -342,14 +353,18 @@ impl<'f: 'g, 'g, 'd, 'tcx: 'd> CretonneFnCtxt<'f, 'g, 'd, 'tcx, 'tcx> {
             panic!("Unimplemented: function prologue");
         }
 
-        debug!("done translating fn {:?}\n",
-               self.tcx.item_path_str(self.did));
+        debug!(
+            "done translating fn {:?}\n",
+            self.tcx.item_path_str(self.did)
+        );
     }
 
-    fn trans_assignment(&mut self,
-                        lvalue: &Lvalue<'tcx>,
-                        rvalue: &Rvalue<'tcx>,
-                        statements: &mut Vec<cretonne::ir::Value>) {
+    fn trans_assignment(
+        &mut self,
+        lvalue: &Lvalue<'tcx>,
+        rvalue: &Rvalue<'tcx>,
+        statements: &mut Vec<cretonne::ir::Value>,
+    ) {
         let mir = self.mir;
 
         let dest = match self.trans_lval(lvalue) {
@@ -357,9 +372,11 @@ impl<'f: 'g, 'g, 'd, 'tcx: 'd> CretonneFnCtxt<'f, 'g, 'd, 'tcx, 'tcx> {
             None => {
                 // TODO: the rvalue may have some effects that we need to preserve. For example,
                 // reading from memory can cause a fault.
-                debug!("trans_assignment lval is unit: {:?} = {:?}; skipping",
-                       lvalue,
-                       rvalue);
+                debug!(
+                    "trans_assignment lval is unit: {:?} = {:?}; skipping",
+                    lvalue,
+                    rvalue
+                );
                 return;
             }
         };
@@ -372,10 +389,12 @@ impl<'f: 'g, 'g, 'd, 'tcx: 'd> CretonneFnCtxt<'f, 'g, 'd, 'tcx, 'tcx> {
                 let src = self.trans_operand(operand);
                 let statement = match dest.offset {
                     Some(offset) => {
-                        debug!("emitting Store + GetLocal({}) for Assign Use '{:?} = {:?}'",
-                               dest.index,
-                               lvalue,
-                               rvalue);
+                        debug!(
+                            "emitting Store + GetLocal({}) for Assign Use '{:?} = {:?}'",
+                            dest.index,
+                            lvalue,
+                            rvalue
+                        );
                         let ptr = self.builder.use_var(Variable(dest.index));
                         // TODO: match on the dest_ty to know how many bytes to write, not just
                         // i32s
@@ -391,10 +410,12 @@ impl<'f: 'g, 'g, 'd, 'tcx: 'd> CretonneFnCtxt<'f, 'g, 'd, 'tcx, 'tcx> {
                         */
                     }
                     None => {
-                        debug!("emitting SetLocal({}) for Assign Use '{:?} = {:?}'",
-                               dest.index,
-                               lvalue,
-                               rvalue);
+                        debug!(
+                            "emitting SetLocal({}) for Assign Use '{:?} = {:?}'",
+                            dest.index,
+                            lvalue,
+                            rvalue
+                        );
                         panic!("Unimplemented: set_local for assign use");
                         /*
                         CretonneSetLocal(self.func.module.module, dest.index, src)
@@ -432,19 +453,39 @@ impl<'f: 'g, 'g, 'd, 'tcx: 'd> CretonneFnCtxt<'f, 'g, 'd, 'tcx, 'tcx> {
                     BinOp::Eq => self.builder.ins().icmp(IntCC::Equal, left, right),
                     BinOp::Ne => self.builder.ins().icmp(IntCC::NotEqual, left, right),
                     BinOp::Lt => self.builder.ins().icmp(IntCC::SignedLessThan, left, right),
-                    BinOp::Le => self.builder.ins().icmp(IntCC::SignedLessThanOrEqual, left, right),
-                    BinOp::Gt => self.builder.ins().icmp(IntCC::SignedGreaterThan, left, right),
-                    BinOp::Ge => self.builder.ins().icmp(IntCC::SignedGreaterThanOrEqual, left, right),
+                    BinOp::Le => {
+                        self.builder.ins().icmp(
+                            IntCC::SignedLessThanOrEqual,
+                            left,
+                            right,
+                        )
+                    }
+                    BinOp::Gt => {
+                        self.builder.ins().icmp(
+                            IntCC::SignedGreaterThan,
+                            left,
+                            right,
+                        )
+                    }
+                    BinOp::Ge => {
+                        self.builder.ins().icmp(
+                            IntCC::SignedGreaterThanOrEqual,
+                            left,
+                            right,
+                        )
+                    }
                     _ => panic!("unimplemented BinOp: {:?}", op),
                 };
 
                 match dest.offset {
                     Some(offset) => {
-                        debug!("emitting Store + GetLocal({}) for Assign BinaryOp '{:?} = \
+                        debug!(
+                            "emitting Store + GetLocal({}) for Assign BinaryOp '{:?} = \
                                 {:?}'",
-                               dest.index,
-                               lvalue,
-                               rvalue);
+                            dest.index,
+                            lvalue,
+                            rvalue
+                        );
                         let ptr = self.builder.use_var(Variable(dest.index));
                         // TODO: Set the trap/align flags.
                         let memflags = cretonne::ir::MemFlags::new();
@@ -454,10 +495,12 @@ impl<'f: 'g, 'g, 'd, 'tcx: 'd> CretonneFnCtxt<'f, 'g, 'd, 'tcx, 'tcx> {
                         self.builder.ins().store(memflags, op, ptr, memoffset);
                     }
                     None => {
-                        debug!("emitting SetLocal({}) for Assign BinaryOp '{:?} = {:?}'",
-                               dest.index,
-                               lvalue,
-                               rvalue);
+                        debug!(
+                            "emitting SetLocal({}) for Assign BinaryOp '{:?} = {:?}'",
+                            dest.index,
+                            lvalue,
+                            rvalue
+                        );
                         self.builder.def_var(Variable(dest.index), op);
                     }
                 }
@@ -471,10 +514,12 @@ impl<'f: 'g, 'g, 'd, 'tcx: 'd> CretonneFnCtxt<'f, 'g, 'd, 'tcx, 'tcx> {
                 // TODO: for shared refs only ?
                 // TODO: works for refs to "our stack", but not the locals on the wasm stack yet
                 let expr = self.trans_operand(&Operand::Consume(lvalue.clone()));
-                debug!("emitting SetLocal({}) for Assign Ref '{:?} = {:?}'",
-                       dest.index,
-                       lvalue,
-                       rvalue);
+                debug!(
+                    "emitting SetLocal({}) for Assign Ref '{:?} = {:?}'",
+                    dest.index,
+                    lvalue,
+                    rvalue
+                );
                 self.builder.def_var(Variable(dest.index), expr);
             }
 
@@ -498,36 +543,44 @@ impl<'f: 'g, 'g, 'd, 'tcx: 'd> CretonneFnCtxt<'f, 'g, 'd, 'tcx, 'tcx> {
                         match (src_layout, &dest_ty.sty) {
                             (&Layout::Scalar { .. }, &ty::TyInt(_)) |
                             (&Layout::Scalar { .. }, &ty::TyUint(_)) => {
-                                debug!("emitting SetLocal({}) for Scalar Cast Assign '{:?} = \
+                                debug!(
+                                    "emitting SetLocal({}) for Scalar Cast Assign '{:?} = \
                                         {:?}'",
-                                       dest.index,
-                                       lvalue,
-                                       rvalue);
+                                    dest.index,
+                                    lvalue,
+                                    rvalue
+                                );
                                 self.builder.def_var(Variable(dest.index), src);
                             }
                             (&Layout::CEnum { .. }, &ty::TyInt(_)) |
                             (&Layout::CEnum { .. }, &ty::TyUint(_)) => {
-                                debug!("emitting SetLocal({}) for CEnum Cast Assign '{:?} = {:?}'",
-                                       dest.index,
-                                       lvalue,
-                                       rvalue);
+                                debug!(
+                                    "emitting SetLocal({}) for CEnum Cast Assign '{:?} = {:?}'",
+                                    dest.index,
+                                    lvalue,
+                                    rvalue
+                                );
                                 self.builder.def_var(Variable(dest.index), src);
                             }
                             _ => {
-                                panic!("unimplemented '{:?}' Cast '{:?} = {:?}', for {:?} to {:?}",
-                                       kind,
-                                       lvalue,
-                                       rvalue,
-                                       src_layout,
-                                       dest_ty.sty)
+                                panic!(
+                                    "unimplemented '{:?}' Cast '{:?} = {:?}', for {:?} to {:?}",
+                                    kind,
+                                    lvalue,
+                                    rvalue,
+                                    src_layout,
+                                    dest_ty.sty
+                                )
                             }
                         }
                     }
                     _ => {
-                        panic!("unimplemented '{:?}' Cast '{:?} = {:?}'",
-                               kind,
-                               lvalue,
-                               rvalue)
+                        panic!(
+                            "unimplemented '{:?}' Cast '{:?} = {:?}'",
+                            kind,
+                            lvalue,
+                            rvalue
+                        )
                     }
                 }
             }
@@ -539,11 +592,13 @@ impl<'f: 'g, 'g, 'd, 'tcx: 'd> CretonneFnCtxt<'f, 'g, 'd, 'tcx, 'tcx> {
     // TODO this function changed from being passed offsets-after-field to offsets-of-field...
     // but I suspect it still does the right thing - emit a store for every field.
     // Did it miss the first field and emit after the last field of the struct before?
-    fn emit_assign_fields<I>(&mut self,
-                             offsets: I,
-                             operands: &[Operand<'tcx>],
-                             statements: &mut Vec<cretonne::ir::Value>)
-        where I: IntoIterator<Item = u64>
+    fn emit_assign_fields<I>(
+        &mut self,
+        offsets: I,
+        operands: &[Operand<'tcx>],
+        statements: &mut Vec<cretonne::ir::Value>,
+    ) where
+        I: IntoIterator<Item = u64>,
     {
         panic!("Unimplemented: assign_fields");
         /*
@@ -604,21 +659,25 @@ impl<'f: 'g, 'g, 'd, 'tcx: 'd> CretonneFnCtxt<'f, 'g, 'd, 'tcx, 'tcx> {
                         };
 
                         let offset = variant.offsets[field.index()].bytes() as u32;
-                        return Some(CretonneLvalue::new(base.index,
-                                                        base.offset,
-                                                        LvalueExtra::None)
-                                            .offset(offset));
+                        return Some(
+                            CretonneLvalue::new(base.index, base.offset, LvalueExtra::None)
+                                .offset(offset),
+                        );
                     }
                     ProjectionElem::Downcast(_, variant) => {
                         match *base_layout {
                             Layout::General { discr, .. } => {
-                                assert!(base.offset.is_none(),
-                                        "unimplemented Downcast Projection with offset");
+                                assert!(
+                                    base.offset.is_none(),
+                                    "unimplemented Downcast Projection with offset"
+                                );
 
                                 let offset = discr.size().bytes() as u32;
-                                return Some(
-                                    CretonneLvalue::new(base.index, Some(offset),
-                                                        LvalueExtra::DowncastVariant(variant)));
+                                return Some(CretonneLvalue::new(
+                                    base.index,
+                                    Some(offset),
+                                    LvalueExtra::DowncastVariant(variant),
+                                ));
                             }
                             _ => panic!("unimplemented Downcast Projection: {:?}", projection),
                         }
@@ -629,7 +688,11 @@ impl<'f: 'g, 'g, 'd, 'tcx: 'd> CretonneFnCtxt<'f, 'g, 'd, 'tcx, 'tcx> {
             _ => panic!("unimplemented Lvalue: {:?}", lvalue),
         };
 
-        Some(CretonneLvalue::new(i as CretonneIndex, None, LvalueExtra::None))
+        Some(CretonneLvalue::new(
+            i as CretonneIndex,
+            None,
+            LvalueExtra::None,
+        ))
     }
 
     fn trans_operand(&mut self, operand: &Operand<'tcx>) -> cretonne::ir::Value {
@@ -650,16 +713,23 @@ impl<'f: 'g, 'g, 'd, 'tcx: 'd> CretonneFnCtxt<'f, 'g, 'd, 'tcx, 'tcx> {
 
                 match cretonne_lvalue.offset {
                     Some(offset) => {
-                        debug!("emitting GetLocal({}) + Load for '{:?}'",
-                               cretonne_lvalue.index,
-                               lvalue);
+                        debug!(
+                            "emitting GetLocal({}) + Load for '{:?}'",
+                            cretonne_lvalue.index,
+                            lvalue
+                        );
                         let ptr = self.builder.use_var(Variable(cretonne_lvalue.index));
                         // TODO: match on the field ty to know how many bytes to read, not just
                         // i32s
                         // TODO: Set the trap/align flags.
                         let memflags = cretonne::ir::MemFlags::new();
                         let memoffset = cretonne::ir::immediates::Offset32::new(offset as i32);
-                        self.builder.ins().load(cretonne::ir::types::I32, memflags, ptr, memoffset)
+                        self.builder.ins().load(
+                            cretonne::ir::types::I32,
+                            memflags,
+                            ptr,
+                            memoffset,
+                        )
                     }
                     None => {
                         // debug!("emitting GetLocal for '{:?}'", lvalue);
@@ -673,13 +743,20 @@ impl<'f: 'g, 'g, 'd, 'tcx: 'd> CretonneFnCtxt<'f, 'g, 'd, 'tcx, 'tcx> {
                         // TODO: handle more Rust types here
                         match *value {
                             ConstVal::Integral(ConstInt::Isize(ConstIsize::Is32(val))) |
-                            ConstVal::Integral(ConstInt::I32(val)) => self.builder.ins().iconst(cretonne::ir::types::I32, val as i64),
+                            ConstVal::Integral(ConstInt::I32(val)) => {
+                                self.builder.ins().iconst(
+                                    cretonne::ir::types::I32,
+                                    val as i64,
+                                )
+                            }
                             // TODO: Since we're at the wasm32 stage, and until wasm64, it's
                             // probably best if isize is always i32 ?
                             ConstVal::Integral(ConstInt::Isize(ConstIsize::Is64(val))) => {
                                 self.builder.ins().iconst(cretonne::ir::types::I64, val)
                             }
-                            ConstVal::Integral(ConstInt::I64(val)) => self.builder.ins().iconst(cretonne::ir::types::I64, val),
+                            ConstVal::Integral(ConstInt::I64(val)) => {
+                                self.builder.ins().iconst(cretonne::ir::types::I64, val)
+                            }
                             ConstVal::Bool(val) => {
                                 self.builder.ins().bconst(cretonne::ir::types::B1, val)
                             }
@@ -698,13 +775,11 @@ impl<'f: 'g, 'g, 'd, 'tcx: 'd> CretonneFnCtxt<'f, 'g, 'd, 'tcx, 'tcx> {
         // TODO: Is this inefficient? Needs investigation.
         let ty = monomorphize::apply_substs(self.tcx, substs, &ty);
 
-        self.tcx
-            .infer_ctxt()
-            .enter(|infcx| {
-                       // TODO: Report this error properly.
-                       let param_env = ty::ParamEnv::empty(Reveal::All);
-                       ty.layout(self.tcx, param_env).unwrap()
-                   })
+        self.tcx.infer_ctxt().enter(|infcx| {
+            // TODO: Report this error properly.
+            let param_env = ty::ParamEnv::empty(Reveal::All);
+            ty.layout(self.tcx, param_env).unwrap()
+        })
     }
 
     #[inline]
@@ -749,9 +824,9 @@ fn rust_ty_to_cretonne(t: Ty) -> Option<cretonne::ir::Type> {
 fn sanitize_symbol(s: &str) -> String {
     s.chars()
         .map(|c| match c {
-                 '<' | '>' | ' ' | '(' | ')' => '_',
-                 _ => c,
-             })
+            '<' | '>' | ' ' | '(' | ')' => '_',
+            _ => c,
+        })
         .collect()
 }
 

@@ -24,10 +24,11 @@ impl Mir2CretonneCompilerCalls {
 }
 
 impl<'a> CompilerCalls<'a> for Mir2CretonneCompilerCalls {
-    fn build_controller(&mut self,
-                        _: &Session,
-                        _: &getopts::Matches)
-                        -> driver::CompileController<'a> {
+    fn build_controller(
+        &mut self,
+        _: &Session,
+        _: &getopts::Matches,
+    ) -> driver::CompileController<'a> {
         let mut control = driver::CompileController::basic();
 
         let options = self.options.clone();
@@ -42,10 +43,11 @@ impl<'a> CompilerCalls<'a> for Mir2CretonneCompilerCalls {
             } else {
                 None
             };
-            trans::trans_crate(state.tcx.expect("type context needed").global_tcx(),
-                               entry_fn,
-                               &options)
-                    .expect("error translating crate")
+            trans::trans_crate(
+                state.tcx.expect("type context needed").global_tcx(),
+                entry_fn,
+                &options,
+            ).expect("error translating crate")
         });
 
         control
@@ -93,21 +95,21 @@ fn main() {
 
     let mut reified = Vec::<ReifiedOpt>::new();
     reified.push(ReifiedOpt::OptOpt {
-                     short_name: "o",
-                     long_name: "",
-                     desc: "write output to FILE",
-                     hint: "FILE",
-                 });
+        short_name: "o",
+        long_name: "",
+        desc: "write output to FILE",
+        hint: "FILE",
+    });
     reified.push(ReifiedOpt::OptFlag {
-                     short_name: "q",
-                     long_name: "",
-                     desc: "do not print the compiled wast module",
-                 });
+        short_name: "q",
+        long_name: "",
+        desc: "do not print the compiled wast module",
+    });
     reified.push(ReifiedOpt::OptFlag {
-                     short_name: "h",
-                     long_name: "help",
-                     desc: "display this help message",
-                 });
+        short_name: "h",
+        long_name: "help",
+        desc: "display this help message",
+    });
 
     let mut opts = Options::new();
     for reified_opt in &reified {
@@ -133,9 +135,10 @@ fn main() {
     let mut rustc_args = Vec::new();
     let mut mir2cretonne_args = Vec::new();
 
-    fn find_mir2cretonne_arg<'a>(s: &str,
-                                 opts: &'a [ReifiedOpt<'a>])
-                                 -> Option<&'a ReifiedOpt<'a>> {
+    fn find_mir2cretonne_arg<'a>(
+        s: &str,
+        opts: &'a [ReifiedOpt<'a>],
+    ) -> Option<&'a ReifiedOpt<'a>> {
         for o in opts {
             if s.starts_with("--") && &s[2..] == long_name(o) {
                 return Some(o);
@@ -171,8 +174,9 @@ fn main() {
 
     let mut options = Mir2CretonneTransOptions::new();
 
-    let matches = opts.parse(&mir2cretonne_args[..])
-        .expect("could not parse command line arguments");
+    let matches = opts.parse(&mir2cretonne_args[..]).expect(
+        "could not parse command line arguments",
+    );
 
     if matches.opt_present("h") {
         let brief = format!("Usage: {} [options]", args[0]);

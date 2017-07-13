@@ -3,13 +3,13 @@
 #![no_core]
 #![allow(unused_variables)]
 
-#[lang="sized"]
+#[lang = "sized"]
 trait Sized {}
 
-#[lang="copy"]
+#[lang = "copy"]
 trait Copy {}
 
-#[lang="neg"]
+#[lang = "neg"]
 trait Neg {
     type Output;
     fn neg(self) -> Self::Output;

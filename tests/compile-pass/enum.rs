@@ -2,10 +2,10 @@
 #![allow(dead_code)]
 #![no_core]
 
-#[lang="sized"]
+#[lang = "sized"]
 trait Sized {}
 
-#[lang="copy"]
+#[lang = "copy"]
 trait Copy {}
 
 enum Tag {

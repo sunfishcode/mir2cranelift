@@ -304,7 +304,8 @@ pub mod cmp {
 
         // & pointers
         impl<'a, 'b, A: ?Sized, B: ?Sized> PartialEq<&'b B> for &'a A
-            where A: PartialEq<B>
+        where
+            A: PartialEq<B>,
         {
             #[inline]
             fn eq(&self, other: &&'b B) -> bool {
@@ -317,7 +318,8 @@ pub mod cmp {
         }
 
         impl<'a, 'b, A: ?Sized, B: ?Sized> PartialOrd<&'b B> for &'a A
-            where A: PartialOrd<B>
+        where
+            A: PartialOrd<B>,
         {
             #[inline]
             fn partial_cmp(&self, other: &&'b B) -> Option<Ordering> {
@@ -342,7 +344,8 @@ pub mod cmp {
         }
 
         impl<'a, A: ?Sized> Ord for &'a A
-            where A: Ord
+        where
+            A: Ord,
         {
             #[inline]
             fn cmp(&self, other: &&'a A) -> Ordering {
@@ -350,11 +353,16 @@ pub mod cmp {
             }
         }
 
-        impl<'a, A: ?Sized> Eq for &'a A where A: Eq {}
+        impl<'a, A: ?Sized> Eq for &'a A
+        where
+            A: Eq,
+        {
+        }
 
         // &mut pointers
         impl<'a, 'b, A: ?Sized, B: ?Sized> PartialEq<&'b mut B> for &'a mut A
-            where A: PartialEq<B>
+        where
+            A: PartialEq<B>,
         {
             #[inline]
             fn eq(&self, other: &&'b mut B) -> bool {
@@ -367,7 +375,8 @@ pub mod cmp {
         }
 
         impl<'a, 'b, A: ?Sized, B: ?Sized> PartialOrd<&'b mut B> for &'a mut A
-            where A: PartialOrd<B>
+        where
+            A: PartialOrd<B>,
         {
             #[inline]
             fn partial_cmp(&self, other: &&'b mut B) -> Option<Ordering> {
@@ -392,7 +401,8 @@ pub mod cmp {
         }
 
         impl<'a, A: ?Sized> Ord for &'a mut A
-            where A: Ord
+        where
+            A: Ord,
         {
             #[inline]
             fn cmp(&self, other: &&'a mut A) -> Ordering {
@@ -400,10 +410,15 @@ pub mod cmp {
             }
         }
 
-        impl<'a, A: ?Sized> Eq for &'a mut A where A: Eq {}
+        impl<'a, A: ?Sized> Eq for &'a mut A
+        where
+            A: Eq,
+        {
+        }
 
         impl<'a, 'b, A: ?Sized, B: ?Sized> PartialEq<&'b mut B> for &'a A
-            where A: PartialEq<B>
+        where
+            A: PartialEq<B>,
         {
             #[inline]
             fn eq(&self, other: &&'b mut B) -> bool {
@@ -416,7 +431,8 @@ pub mod cmp {
         }
 
         impl<'a, 'b, A: ?Sized, B: ?Sized> PartialEq<&'b B> for &'a mut A
-            where A: PartialEq<B>
+        where
+            A: PartialEq<B>,
         {
             #[inline]
             fn eq(&self, other: &&'b B) -> bool {

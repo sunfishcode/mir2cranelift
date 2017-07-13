@@ -10,10 +10,11 @@ use syntax::codemap::DUMMY_SP;
 // The following is 99% from Miri (terminator.rs), with error handling from rustc trans
 
 /// Trait method, which has to be resolved to an impl method.
-pub fn resolve_trait_method<'a, 'tcx>(tcx: TyCtxt<'a, 'tcx, 'tcx>,
-                                      def_id: DefId,
-                                      substs: &Substs<'tcx>)
-                                      -> (DefId, &'tcx Substs<'tcx>) {
+pub fn resolve_trait_method<'a, 'tcx>(
+    tcx: TyCtxt<'a, 'tcx, 'tcx>,
+    def_id: DefId,
+    substs: &Substs<'tcx>,
+) -> (DefId, &'tcx Substs<'tcx>) {
     let method_item = tcx.associated_item(def_id);
     let trait_id = method_item.container.id();
     let trait_ref = ty::Binder(ty::TraitRef::from_method(tcx, trait_id, substs));
@@ -59,19 +60,21 @@ pub fn resolve_trait_method<'a, 'tcx>(tcx: TyCtxt<'a, 'tcx, 'tcx>,
     }
 }
 
-fn fulfill_obligation<'a, 'tcx>(tcx: TyCtxt<'a, 'tcx, 'tcx>,
-                                trait_ref: ty::PolyTraitRef<'tcx>)
-                                -> traits::Vtable<'tcx, ()> {
+fn fulfill_obligation<'a, 'tcx>(
+    tcx: TyCtxt<'a, 'tcx, 'tcx>,
+    trait_ref: ty::PolyTraitRef<'tcx>,
+) -> traits::Vtable<'tcx, ()> {
     // Do the initial selection for the obligation. This yields the shallow result we are
     // looking for -- that is, what specific impl.
     tcx.infer_ctxt().enter(|infcx| {
         let mut selcx = traits::SelectionContext::new(&infcx);
 
         let param_env = ty::ParamEnv::empty(Reveal::All);
-        let obligation = traits::Obligation::new(traits::ObligationCause::misc(DUMMY_SP,
-                                                                               DUMMY_NODE_ID),
-                                                 param_env,
-                                                 trait_ref.to_poly_trait_predicate());
+        let obligation = traits::Obligation::new(
+            traits::ObligationCause::misc(DUMMY_SP, DUMMY_NODE_ID),
+            param_env,
+            trait_ref.to_poly_trait_predicate(),
+        );
 
         // NOTE: This is the error handling from trans adapted to miri's fullfill_obligation
         let selection = match selcx.select(&obligation) {
@@ -83,18 +86,24 @@ fn fulfill_obligation<'a, 'tcx>(tcx: TyCtxt<'a, 'tcx, 'tcx>,
                 // leading to an ambiguous result. So report this as an
                 // overflow bug, since I believe this is the only case
                 // where ambiguity can result.
-                debug!("Encountered ambiguity selecting `{:?}` during trans, \
+                debug!(
+                    "Encountered ambiguity selecting `{:?}` during trans, \
                         presuming due to overflow",
-                       trait_ref);
+                    trait_ref
+                );
                 // NOTE: in trans, this is a tcx.sess.span_fatal(&self.span,...) error rather than
                 // a panic
-                panic!("reached the recursion limit during monomorphization \
-                        (selection ambiguity)");
+                panic!(
+                    "reached the recursion limit during monomorphization \
+                        (selection ambiguity)"
+                );
             }
             Err(e) => {
-                panic!("Encountered error `{:?}` selecting `{:?}` during trans",
-                       e,
-                       trait_ref)
+                panic!(
+                    "Encountered error `{:?}` selecting `{:?}` during trans",
+                    e,
+                    trait_ref
+                )
             }
         };
 
@@ -116,36 +125,39 @@ struct ImplMethod<'tcx> {
 }
 
 /// Locates the applicable definition of a method, given its name.
-fn get_impl_method<'a, 'tcx>(tcx: TyCtxt<'a, 'tcx, 'tcx>,
-                             impl_def_id: DefId,
-                             substs: &'tcx Substs<'tcx>,
-                             name: Name)
-                             -> ImplMethod<'tcx> {
+fn get_impl_method<'a, 'tcx>(
+    tcx: TyCtxt<'a, 'tcx, 'tcx>,
+    impl_def_id: DefId,
+    substs: &'tcx Substs<'tcx>,
+    name: Name,
+) -> ImplMethod<'tcx> {
     assert!(!substs.needs_infer());
 
     let trait_def_id = tcx.trait_id_of_impl(impl_def_id).unwrap();
     let trait_def = tcx.trait_def(trait_def_id);
 
     match trait_def
-              .ancestors(tcx, impl_def_id)
-              .defs(tcx, name, ty::AssociatedKind::Method)
-              .next() {
+        .ancestors(tcx, impl_def_id)
+        .defs(tcx, name, ty::AssociatedKind::Method)
+        .next() {
         Some(node_item) => {
-            let substs = tcx.infer_ctxt()
-                .enter(|infcx| {
-                    let param_env = ty::ParamEnv::empty(Reveal::All);
-                    let substs = traits::translate_substs(&infcx,
-                                                          param_env,
-                                                          impl_def_id,
-                                                          substs,
-                                                          node_item.node);
-                    tcx.lift(&substs)
-                        .unwrap_or_else(|| {
-                                            bug!("trans::meth::get_impl_method: translate_substs \
+            let substs = tcx.infer_ctxt().enter(|infcx| {
+                let param_env = ty::ParamEnv::empty(Reveal::All);
+                let substs = traits::translate_substs(
+                    &infcx,
+                    param_env,
+                    impl_def_id,
+                    substs,
+                    node_item.node,
+                );
+                tcx.lift(&substs).unwrap_or_else(|| {
+                    bug!(
+                        "trans::meth::get_impl_method: translate_substs \
                           returned {:?} which contains inference types/regions",
-                                                 substs);
-                                        })
-                });
+                        substs
+                    );
+                })
+            });
             ImplMethod {
                 method: node_item.item,
                 substs: substs,
